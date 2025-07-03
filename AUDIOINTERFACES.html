@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Interface Showdown: A Visual Deep Dive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+                max-height: 400px;
+            }
+        }
+        .flowchart-arrow {
+            position: relative;
+            width: 1.5rem;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .flowchart-arrow::after {
+            content: '▶';
+            color: #F9DC5C;
+            font-size: 1.5rem;
+        }
+        .flowchart-line {
+            width: 100%;
+            height: 2px;
+            background-color: #3185FC;
+        }
+        .flowchart-line-vertical {
+            width: 2px;
+            height: 3rem;
+            background-color: #3185FC;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body class="bg-[#0B0B0C] text-[#E6FDFF]">
+
+    <div class="container mx-auto p-4 md:p-8">
+
+        <header class="text-center my-8 md:my-12">
+            <h1 class="text-4xl md:text-6xl font-black tracking-tight leading-tight">Audio Interface Showdown</h1>
+            <p class="text-lg md:text-xl text-gray-400 mt-2 max-w-3xl mx-auto">A visual deep dive into the four most popular 2-in/2-out interfaces for modern creators.</p>
+        </header>
+
+        <section id="contenders" class="my-16">
+            <h2 class="text-3xl font-bold text-center mb-8">The Contenders & Their Philosophies</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700 text-center">
+                    <h3 class="text-xl font-bold text-[#E84855]">Arturia Minifuse 2</h3>
+                    <p class="mt-2 text-gray-300">The champion of <span class="font-semibold text-white">practicality and value</span>, focused on core audio quality and solving physical connectivity issues.</p>
+                </div>
+                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700 text-center">
+                    <h3 class="text-xl font-bold text-[#F9DC5C]">Steinberg UR22C</h3>
+                    <p class="mt-2 text-gray-300">The champion of <span class="font-semibold text-white">integrated processing</span>, built for a zero-latency recording experience with onboard effects.</p>
+                </div>
+                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700 text-center">
+                    <h3 class="text-xl font-bold text-[#3185FC]">MOTU M2</h3>
+                    <p class="mt-2 text-gray-300">The champion of <span class="font-semibold text-white">pure audio fidelity</span>, boasting high-end converter tech and professional monitoring tools.</p>
+                </div>
+                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700 text-center">
+                    <h3 class="text-xl font-bold text-[#E6FDFF]">Focusrite 2i2 (4th Gen)</h3>
+                    <p class="mt-2 text-gray-300">The champion of <span class="font-semibold text-white">intelligent recording</span>, designed with automated features to guarantee a perfect take.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="preamps" class="my-16">
+            <h2 class="text-3xl font-bold text-center mb-4">Preamplifier Power</h2>
+            <p class="text-center text-gray-400 max-w-2xl mx-auto mb-10">The heart of any interface is its ability to cleanly amplify a microphone signal. We compare three key metrics: Gain Range, Dynamic Range, and self-noise (EIN).</p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
+                    <h3 class="text-xl font-bold text-center mb-4">Mic Preamp Gain Range (dB)</h3>
+                    <p class="text-center text-sm text-gray-400 mb-4">More gain allows you to use quieter microphones without needing an external booster. Higher is better.</p>
+                    <div class="chart-container"><canvas id="gainChart"></canvas></div>
+                </div>
+                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
+                    <h3 class="text-xl font-bold text-center mb-4">Input Dynamic Range (dB)</h3>
+                    <p class="text-center text-sm text-gray-400 mb-4">The difference between the loudest and quietest sounds an interface can capture. A wider range means cleaner, less noisy recordings. Higher is better.</p>
+                    <div class="chart-container"><canvas id="dynamicRangeChart"></canvas></div>
+                </div>
+                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700 lg:col-span-2">
+                    <h3 class="text-xl font-bold text-center mb-4">Equivalent Input Noise (EIN in dBu)</h3>
+                     <p class="text-center text-sm text-gray-400 mb-4">A measure of the preamp's self-noise. A more negative number indicates a quieter preamp. (Note: Steinberg does not specify this metric).</p>
+                    <div class="chart-container"><canvas id="einChart"></canvas></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="monitoring" class="my-16">
+            <h2 class="text-3xl font-bold text-center mb-4">Monitoring Mastery</h2>
+            <p class="text-center text-gray-400 max-w-2xl mx-auto mb-10">A good headphone output is critical for accurate monitoring. We compare power (for volume) and impedance (for frequency accuracy).</p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
+                    <h3 class="text-xl font-bold text-center mb-4">Headphone Output Power (mW @ 33Ω)</h3>
+                    <p class="text-center text-sm text-gray-400 mb-4">Determines how loud the headphones can get. More power is needed for high-impedance headphones. Higher is better.</p>
+                    <div class="chart-container"><canvas id="headphonePowerChart"></canvas></div>
+                </div>
+                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
+                    <h3 class="text-xl font-bold text-center mb-4">Headphone Output Impedance (Ω)</h3>
+                    <p class="text-center text-sm text-gray-400 mb-4">Affects the frequency response of your headphones. A low impedance (< 1/8th of headphone impedance) is ideal for accuracy. Lower is better.</p>
+                    <div class="chart-container"><canvas id="headphoneImpedanceChart"></canvas></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="my-16">
+            <h2 class="text-3xl font-bold text-center mb-10">Feature Face-Off</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700 text-center transform hover:scale-105 transition-transform duration-300">
+                    <div class="text-5xl mb-4">🔌</div>
+                    <h3 class="text-xl font-bold text-[#E84855]">Arturia: USB-A Hub</h3>
+                    <p class="mt-2 text-gray-300">A built-in port to connect a MIDI controller or security dongle, freeing up a port on your computer.</p>
+                </div>
+                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700 text-center transform hover:scale-105 transition-transform duration-300">
+                    <div class="text-5xl mb-4">🎛️</div>
+                    <h3 class="text-xl font-bold text-[#F9DC5C]">Steinberg: Onboard DSP</h3>
+                    <p class="mt-2 text-gray-300">An internal chip runs reverb, EQ, and compression with zero latency for confidence-inspiring monitoring.</p>
+                </div>
+                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700 text-center transform hover:scale-105 transition-transform duration-300">
+                    <div class="text-5xl mb-4">🖥️</div>
+                    <h3 class="text-xl font-bold text-[#3185FC]">MOTU: LCD Metering</h3>
+                    <p class="mt-2 text-gray-300">A full-color screen provides detailed, professional-level metering for precise gain-staging.</p>
+                </div>
+                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700 text-center transform hover:scale-105 transition-transform duration-300">
+                    <div class="text-5xl mb-4">🤖</div>
+                    <h3 class="text-xl font-bold text-[#E6FDFF]">Focusrite: Auto Gain & Clip Safe</h3>
+                    <p class="mt-2 text-gray-300">Intelligent features that automatically set your recording level and prevent digital clipping.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="verdict" class="my-20">
+            <h2 class="text-3xl font-bold text-center mb-4">The Verdict: Which Interface is for You?</h2>
+            <p class="text-center text-gray-400 max-w-2xl mx-auto mb-12">Follow the flowchart based on your primary need to find your perfect match.</p>
+            <div class="bg-gray-800/50 p-8 rounded-xl border border-gray-700">
+                <div class="flex flex-col items-center">
+                    <div class="bg-gray-900 p-4 rounded-lg border border-[#E84855] text-center shadow-lg">
+                        <h4 class="text-xl font-bold">What is your #1 priority?</h4>
+                    </div>
+                    <div class="flowchart-line-vertical"></div>
+                    <div class="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <div class="flex flex-col items-center text-center">
+                            <div class="bg-gray-700 p-4 rounded-lg w-full">Foolproof, easy recording</div>
+                            <div class="flowchart-line-vertical rotate-90 md:rotate-0" style="height: 2px; width: 50%; margin: 1.5rem auto;"></div>
+                            <div class="flowchart-line-vertical hidden md:block"></div>
+                            <div class="bg-gray-900 p-4 rounded-lg border-2 border-[#E6FDFF] w-full transform hover:scale-105 transition-transform">Focusrite 2i2</div>
+                        </div>
+                        <div class="flex flex-col items-center text-center">
+                             <div class="bg-gray-700 p-4 rounded-lg w-full">The best audio fidelity</div>
+                            <div class="flowchart-line-vertical rotate-90 md:rotate-0" style="height: 2px; width: 50%; margin: 1.5rem auto;"></div>
+                            <div class="flowchart-line-vertical hidden md:block"></div>
+                             <div class="bg-gray-900 p-4 rounded-lg border-2 border-[#3185FC] w-full transform hover:scale-105 transition-transform">MOTU M2</div>
+                        </div>
+                        <div class="flex flex-col items-center text-center">
+                             <div class="bg-gray-700 p-4 rounded-lg w-full">Zero-latency effects</div>
+                            <div class="flowchart-line-vertical rotate-90 md:rotate-0" style="height: 2px; width: 50%; margin: 1.5rem auto;"></div>
+                            <div class="flowchart-line-vertical hidden md:block"></div>
+                             <div class="bg-gray-900 p-4 rounded-lg border-2 border-[#F9DC5C] w-full transform hover:scale-105 transition-transform">Steinberg UR22C</div>
+                        </div>
+                        <div class="flex flex-col items-center text-center">
+                             <div class="bg-gray-700 p-4 rounded-lg w-full">Maximum connectivity</div>
+                            <div class="flowchart-line-vertical rotate-90 md:rotate-0" style="height: 2px; width: 50%; margin: 1.5rem auto;"></div>
+                            <div class="flowchart-line-vertical hidden md:block"></div>
+                             <div class="bg-gray-900 p-4 rounded-lg border-2 border-[#E84855] w-full transform hover:scale-105 transition-transform">Arturia Minifuse 2</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const FONT_COLOR = '#E6FDFF';
+            const GRID_COLOR = 'rgba(230, 253, 255, 0.1)';
+            const PALETTE = {
+                red: '#E84855',
+                yellow: '#F9DC5C',
+                blue: '#3185FC',
+                light: '#E6FDFF'
+            };
+
+            function wrapLabel(str, maxWidth) {
+                if (typeof str !== 'string' || str.length <= maxWidth) {
+                    return str;
+                }
+                const words = str.split(' ');
+                let lines = [];
+                let currentLine = words[0];
+                for (let i = 1; i < words.length; i++) {
+                    if ((currentLine + ' ' + words[i]).length > maxWidth) {
+                        lines.push(currentLine);
+                        currentLine = words[i];
+                    } else {
+                        currentLine += ' ' + words[i];
+                    }
+                }
+                lines.push(currentLine);
+                return lines;
+            }
+
+            const commonTooltipConfig = {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                let label = item.chart.data.labels[item.dataIndex];
+                                if (Array.isArray(label)) {
+                                  return label.join(' ');
+                                } else {
+                                  return label;
+                                }
+                            }
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                }
+            };
+
+            const commonAxisConfig = {
+                ticks: { color: FONT_COLOR, font: { size: 12 } },
+                grid: { color: GRID_COLOR, drawBorder: false }
+            };
+
+            const labels = [
+                wrapLabel('Arturia Minifuse 2', 16),
+                wrapLabel('Steinberg UR22C', 16),
+                wrapLabel('MOTU M2', 16),
+                wrapLabel('Focusrite 2i2 4th Gen', 16)
+            ];
+
+            new Chart(document.getElementById('gainChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Gain Range (dB)',
+                        data: [56, 60, 60, 69],
+                        backgroundColor: [PALETTE.red, PALETTE.yellow, PALETTE.blue, PALETTE.light],
+                        borderColor: 'transparent',
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: { ...commonTooltipConfig, responsive: true, maintainAspectRatio: false, scales: { y: { ...commonAxisConfig, beginAtZero: true }, x: { ...commonAxisConfig } } }
+            });
+
+            new Chart(document.getElementById('dynamicRangeChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Dynamic Range (dB)',
+                        data: [110, 102, 115, 116],
+                        backgroundColor: [PALETTE.red, PALETTE.yellow, PALETTE.blue, PALETTE.light],
+                        borderColor: 'transparent',
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: { ...commonTooltipConfig, responsive: true, maintainAspectRatio: false, scales: { y: { ...commonAxisConfig, suggestedMin: 100 }, x: { ...commonAxisConfig } } }
+            });
+            
+            new Chart(document.getElementById('einChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'EIN (dBu)',
+                        data: [-129, 0, -129, -127],
+                        backgroundColor: [PALETTE.red, '#4B5563', PALETTE.blue, PALETTE.light],
+                        borderColor: 'transparent',
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: { ...commonTooltipConfig, responsive: true, maintainAspectRatio: false, scales: { y: { ...commonAxisConfig, suggestedMax: 0 }, x: { ...commonAxisConfig } } }
+            });
+
+            new Chart(document.getElementById('headphonePowerChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Power (mW)',
+                        data: [137, 15, 90, 32],
+                        backgroundColor: [PALETTE.red, PALETTE.yellow, PALETTE.blue, PALETTE.light],
+                        borderColor: 'transparent',
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: { ...commonTooltipConfig, responsive: true, maintainAspectRatio: false, scales: { y: { ...commonAxisConfig, beginAtZero: true }, x: { ...commonAxisConfig } } }
+            });
+
+            new Chart(document.getElementById('headphoneImpedanceChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Impedance (Ω)',
+                        data: [10, 40, 1, 50],
+                        backgroundColor: [PALETTE.red, PALETTE.yellow, PALETTE.blue, PALETTE.light],
+                        borderColor: 'transparent',
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: { ...commonTooltipConfig, responsive: true, maintainAspectRatio: false, scales: { y: { ...commonAxisConfig, beginAtZero: true }, x: { ...commonAxisConfig } } }
+            });
+        });
+    </script>
+</body>
+</html>
