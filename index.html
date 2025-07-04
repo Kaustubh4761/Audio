@@ -3,335 +3,401 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Interface Showdown: A Visual Deep Dive</title>
+    <title>Interactive Guide to Indian Audio Vendors with Gemini AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral (Stone, Amber, Teal) -->
+    <!-- Application Structure Plan: The SPA is structured as a guided "Vendor Finder" tool. It begins by asking the user to self-identify with a persona (Musician, Audiophile, Casual Listener). This choice filters the entire application's content, presenting only relevant vendor archetypes, detailed vendor comparisons (via an interactive radar chart), and tailored strategic advice. This task-oriented, non-linear flow is superior to the report's linear structure because it provides immediate, personalized value, preventing information overload and guiding the user directly to the most relevant data for their specific purchasing journey. Gemini API features are integrated to provide dynamic, personalized advice at key decision points. -->
+    <!-- Visualization & Content Choices: 1. Vendor Archetypes: Report Info (Sec 1) -> Goal: Segment -> Viz: Interactive Cards -> Interaction: Click to filter vendors -> Justification: Visual and intuitive navigation. 2. Vendor Comparison: Report Info (Sec 3) -> Goal: Compare trade-offs -> Viz: Interactive Radar Chart (Chart.js) -> Interaction: Toggle vendors on/off -> Justification: Visually represents the core report finding (Service vs. Selection trade-off) more effectively than a table. 3. Vendor Details: Report Info (Sec 2) -> Goal: Organize Details -> Viz: Filterable Grid of Cards -> Interaction: Click card for modal with pros/cons -> Justification: Scannable, mobile-friendly, and allows deep-dives without leaving the page. 4. Strategic Advice: Report Info (Sec 5) -> Goal: Advise -> Viz: Tabbed Content -> Interaction: Click tab for persona-specific advice -> Justification: Organizes final recommendations cleanly. 5. Brand Directory: Report Info (Table 3) -> Goal: Reference -> Viz: Searchable HTML table -> Interaction: Live search filter -> Justification: High utility for verifying authorized dealers. 6. Gemini Rationale: Goal: Synthesize & Advise -> Viz: Text block in modal -> Interaction: Button click -> Justification: Provides on-demand, AI-powered decision support. 7. Gemini Product Suggestion: Goal: Recommend -> Viz: Input + Text block -> Interaction: Button click -> Justification: Turns abstract needs into concrete, actionable product suggestions. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .persona-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .persona-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .vendor-card {
+            transition: box-shadow 0.2s ease-in-out;
+        }
+        .vendor-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .modal {
+            transition: opacity 0.25s ease;
         }
         .chart-container {
             position: relative;
             width: 100%;
-            max-width: 800px;
+            max-width: 700px;
             margin-left: auto;
             margin-right: auto;
             height: 300px;
-            max-height: 350px;
+            max-height: 50vh;
         }
         @media (min-width: 768px) {
             .chart-container {
-                height: 350px;
-                max-height: 400px;
+                height: 450px;
             }
         }
-        .flowchart-arrow {
-            position: relative;
-            width: 1.5rem;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
         }
-        .flowchart-arrow::after {
-            content: '▶';
-            color: #F9DC5C;
-            font-size: 1.5rem;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .flowchart-line {
-            width: 100%;
-            height: 2px;
-            background-color: #3185FC;
-        }
-        .flowchart-line-vertical {
-            width: 2px;
-            height: 3rem;
-            background-color: #3185FC;
-            margin: 0 auto;
+        .gemini-button {
+            background: linear-gradient(to right, #4f46e5, #9333ea);
         }
     </style>
 </head>
-<body class="bg-[#0B0B0C] text-[#E6FDFF]">
+<body class="text-slate-800">
 
-    <div class="container mx-auto p-4 md:p-8">
+    <div id="app" class="container mx-auto px-4 py-8 md:py-12">
 
-        <header class="text-center my-8 md:my-12">
-            <h1 class="text-4xl md:text-6xl font-black tracking-tight leading-tight">Audio Interface Showdown</h1>
-            <p class="text-lg md:text-xl text-gray-400 mt-2 max-w-3xl mx-auto">A visual deep dive into the four most popular 2-in/2-out interfaces for modern creators.</p>
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-2">The AI-Powered Guide to Indian Audio Vendors</h1>
+            <p class="text-lg text-slate-600 max-w-3xl mx-auto">Navigate India's audio market with interactive data and personalized AI-driven advice. Find the perfect gear from the right vendor.</p>
         </header>
 
-        <section id="contenders" class="my-16">
-            <h2 class="text-3xl font-bold text-center mb-8">The Contenders & Their Philosophies</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700 text-center">
-                    <h3 class="text-xl font-bold text-[#E84855]">Arturia Minifuse 2</h3>
-                    <p class="mt-2 text-gray-300">The champion of <span class="font-semibold text-white">practicality and value</span>, focused on core audio quality and solving physical connectivity issues.</p>
+        <!-- Step 1: Persona Selection -->
+        <section id="persona-selection" class="mb-16 fade-in">
+            <h2 class="text-2xl md:text-3xl font-bold text-center mb-8">First, who are you?</h2>
+            <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div class="persona-card bg-white p-8 rounded-lg shadow-sm border border-slate-200 cursor-pointer text-center" onclick="selectPersona('musician')">
+                    <div class="text-5xl mb-4">🎤</div>
+                    <h3 class="text-xl font-bold mb-2">The Musician / Producer</h3>
+                    <p class="text-slate-600">You're creating music. You need reliable tools like audio interfaces, studio monitors, and microphones.</p>
                 </div>
-                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700 text-center">
-                    <h3 class="text-xl font-bold text-[#F9DC5C]">Steinberg UR22C</h3>
-                    <p class="mt-2 text-gray-300">The champion of <span class="font-semibold text-white">integrated processing</span>, built for a zero-latency recording experience with onboard effects.</p>
+                <div class="persona-card bg-white p-8 rounded-lg shadow-sm border border-slate-200 cursor-pointer text-center" onclick="selectPersona('audiophile')">
+                    <div class="text-5xl mb-4">🎧</div>
+                    <h3 class="text-xl font-bold mb-2">The Discerning Audiophile</h3>
+                    <p class="text-slate-600">You're a critical listener. You seek the ultimate sound quality from headphones, IEMs, DACs, and Hi-Fi speakers.</p>
                 </div>
-                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700 text-center">
-                    <h3 class="text-xl font-bold text-[#3185FC]">MOTU M2</h3>
-                    <p class="mt-2 text-gray-300">The champion of <span class="font-semibold text-white">pure audio fidelity</span>, boasting high-end converter tech and professional monitoring tools.</p>
-                </div>
-                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700 text-center">
-                    <h3 class="text-xl font-bold text-[#E6FDFF]">Focusrite 2i2 (4th Gen)</h3>
-                    <p class="mt-2 text-gray-300">The champion of <span class="font-semibold text-white">intelligent recording</span>, designed with automated features to guarantee a perfect take.</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="preamps" class="my-16">
-            <h2 class="text-3xl font-bold text-center mb-4">Preamplifier Power</h2>
-            <p class="text-center text-gray-400 max-w-2xl mx-auto mb-10">The heart of any interface is its ability to cleanly amplify a microphone signal. We compare three key metrics: Gain Range, Dynamic Range, and self-noise (EIN).</p>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
-                    <h3 class="text-xl font-bold text-center mb-4">Mic Preamp Gain Range (dB)</h3>
-                    <p class="text-center text-sm text-gray-400 mb-4">More gain allows you to use quieter microphones without needing an external booster. Higher is better.</p>
-                    <div class="chart-container"><canvas id="gainChart"></canvas></div>
-                </div>
-                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
-                    <h3 class="text-xl font-bold text-center mb-4">Input Dynamic Range (dB)</h3>
-                    <p class="text-center text-sm text-gray-400 mb-4">The difference between the loudest and quietest sounds an interface can capture. A wider range means cleaner, less noisy recordings. Higher is better.</p>
-                    <div class="chart-container"><canvas id="dynamicRangeChart"></canvas></div>
-                </div>
-                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700 lg:col-span-2">
-                    <h3 class="text-xl font-bold text-center mb-4">Equivalent Input Noise (EIN in dBu)</h3>
-                     <p class="text-center text-sm text-gray-400 mb-4">A measure of the preamp's self-noise. A more negative number indicates a quieter preamp. (Note: Steinberg does not specify this metric).</p>
-                    <div class="chart-container"><canvas id="einChart"></canvas></div>
+                <div class="persona-card bg-white p-8 rounded-lg shadow-sm border border-slate-200 cursor-pointer text-center" onclick="selectPersona('general')">
+                    <div class="text-5xl mb-4">📱</div>
+                    <h3 class="text-xl font-bold mb-2">The General Consumer</h3>
+                    <p class="text-slate-600">You need great sound for daily life. You're looking for TWS, Bluetooth speakers, and mainstream headphones.</p>
                 </div>
             </div>
         </section>
 
-        <section id="monitoring" class="my-16">
-            <h2 class="text-3xl font-bold text-center mb-4">Monitoring Mastery</h2>
-            <p class="text-center text-gray-400 max-w-2xl mx-auto mb-10">A good headphone output is critical for accurate monitoring. We compare power (for volume) and impedance (for frequency accuracy).</p>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
-                    <h3 class="text-xl font-bold text-center mb-4">Headphone Output Power (mW @ 33Ω)</h3>
-                    <p class="text-center text-sm text-gray-400 mb-4">Determines how loud the headphones can get. More power is needed for high-impedance headphones. Higher is better.</p>
-                    <div class="chart-container"><canvas id="headphonePowerChart"></canvas></div>
-                </div>
-                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
-                    <h3 class="text-xl font-bold text-center mb-4">Headphone Output Impedance (Ω)</h3>
-                    <p class="text-center text-sm text-gray-400 mb-4">Affects the frequency response of your headphones. A low impedance (< 1/8th of headphone impedance) is ideal for accuracy. Lower is better.</p>
-                    <div class="chart-container"><canvas id="headphoneImpedanceChart"></canvas></div>
-                </div>
-            </div>
-        </section>
+        <!-- Main Content Area (Hidden by default) -->
+        <main id="main-content" class="hidden">
+            
+            <div id="welcome-header" class="text-center mb-12 fade-in"></div>
 
-        <section id="features" class="my-16">
-            <h2 class="text-3xl font-bold text-center mb-10">Feature Face-Off</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700 text-center transform hover:scale-105 transition-transform duration-300">
-                    <div class="text-5xl mb-4">🔌</div>
-                    <h3 class="text-xl font-bold text-[#E84855]">Arturia: USB-A Hub</h3>
-                    <p class="mt-2 text-gray-300">A built-in port to connect a MIDI controller or security dongle, freeing up a port on your computer.</p>
-                </div>
-                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700 text-center transform hover:scale-105 transition-transform duration-300">
-                    <div class="text-5xl mb-4">🎛️</div>
-                    <h3 class="text-xl font-bold text-[#F9DC5C]">Steinberg: Onboard DSP</h3>
-                    <p class="mt-2 text-gray-300">An internal chip runs reverb, EQ, and compression with zero latency for confidence-inspiring monitoring.</p>
-                </div>
-                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700 text-center transform hover:scale-105 transition-transform duration-300">
-                    <div class="text-5xl mb-4">🖥️</div>
-                    <h3 class="text-xl font-bold text-[#3185FC]">MOTU: LCD Metering</h3>
-                    <p class="mt-2 text-gray-300">A full-color screen provides detailed, professional-level metering for precise gain-staging.</p>
-                </div>
-                <div class="bg-gray-800/50 p-6 rounded-xl border border-gray-700 text-center transform hover:scale-105 transition-transform duration-300">
-                    <div class="text-5xl mb-4">🤖</div>
-                    <h3 class="text-xl font-bold text-[#E6FDFF]">Focusrite: Auto Gain & Clip Safe</h3>
-                    <p class="mt-2 text-gray-300">Intelligent features that automatically set your recording level and prevent digital clipping.</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="verdict" class="my-20">
-            <h2 class="text-3xl font-bold text-center mb-4">The Verdict: Which Interface is for You?</h2>
-            <p class="text-center text-gray-400 max-w-2xl mx-auto mb-12">Follow the flowchart based on your primary need to find your perfect match.</p>
-            <div class="bg-gray-800/50 p-8 rounded-xl border border-gray-700">
-                <div class="flex flex-col items-center">
-                    <div class="bg-gray-900 p-4 rounded-lg border border-[#E84855] text-center shadow-lg">
-                        <h4 class="text-xl font-bold">What is your #1 priority?</h4>
-                    </div>
-                    <div class="flowchart-line-vertical"></div>
-                    <div class="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                        <div class="flex flex-col items-center text-center">
-                            <div class="bg-gray-700 p-4 rounded-lg w-full">Foolproof, easy recording</div>
-                            <div class="flowchart-line-vertical rotate-90 md:rotate-0" style="height: 2px; width: 50%; margin: 1.5rem auto;"></div>
-                            <div class="flowchart-line-vertical hidden md:block"></div>
-                            <div class="bg-gray-900 p-4 rounded-lg border-2 border-[#E6FDFF] w-full transform hover:scale-105 transition-transform">Focusrite 2i2</div>
-                        </div>
-                        <div class="flex flex-col items-center text-center">
-                             <div class="bg-gray-700 p-4 rounded-lg w-full">The best audio fidelity</div>
-                            <div class="flowchart-line-vertical rotate-90 md:rotate-0" style="height: 2px; width: 50%; margin: 1.5rem auto;"></div>
-                            <div class="flowchart-line-vertical hidden md:block"></div>
-                             <div class="bg-gray-900 p-4 rounded-lg border-2 border-[#3185FC] w-full transform hover:scale-105 transition-transform">MOTU M2</div>
-                        </div>
-                        <div class="flex flex-col items-center text-center">
-                             <div class="bg-gray-700 p-4 rounded-lg w-full">Zero-latency effects</div>
-                            <div class="flowchart-line-vertical rotate-90 md:rotate-0" style="height: 2px; width: 50%; margin: 1.5rem auto;"></div>
-                            <div class="flowchart-line-vertical hidden md:block"></div>
-                             <div class="bg-gray-900 p-4 rounded-lg border-2 border-[#F9DC5C] w-full transform hover:scale-105 transition-transform">Steinberg UR22C</div>
-                        </div>
-                        <div class="flex flex-col items-center text-center">
-                             <div class="bg-gray-700 p-4 rounded-lg w-full">Maximum connectivity</div>
-                            <div class="flowchart-line-vertical rotate-90 md:rotate-0" style="height: 2px; width: 50%; margin: 1.5rem auto;"></div>
-                            <div class="flowchart-line-vertical hidden md:block"></div>
-                             <div class="bg-gray-900 p-4 rounded-lg border-2 border-[#E84855] w-full transform hover:scale-105 transition-transform">Arturia Minifuse 2</div>
-                        </div>
+            <section id="vendor-comparison" class="mb-16 fade-in">
+                 <h2 class="text-2xl md:text-3xl font-bold text-center mb-4">Vendor Landscape: At a Glance</h2>
+                 <p class="text-center text-slate-600 mb-8 max-w-3xl mx-auto">This chart visualizes how different vendor types perform across key factors. Click a vendor in the legend to add or remove them from the comparison.</p>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <div class="chart-container">
+                        <canvas id="vendorRadarChart"></canvas>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
+
+            <section id="vendor-profiles" class="mb-16 fade-in">
+                <h2 class="text-2xl md:text-3xl font-bold text-center mb-4">Explore Relevant Vendors</h2>
+                <p class="text-center text-slate-600 mb-8 max-w-3xl mx-auto">Based on your profile, these are the most relevant places to shop. Click any card for a detailed breakdown.</p>
+                <div id="vendor-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+            </section>
+            
+            <section id="recommendations" class="mb-16 fade-in">
+                 <h2 class="text-2xl md:text-3xl font-bold text-center mb-4">Your Purchasing Strategy</h2>
+                 <p class="text-center text-slate-600 mb-8 max-w-3xl mx-auto">Use this tailored advice and our AI assistant to make a smart, secure purchase.</p>
+                <div class="bg-white p-8 rounded-lg shadow-sm border border-slate-200 space-y-6">
+                    <div id="recommendation-content"></div>
+                    <div class="border-t border-slate-200 pt-6">
+                        <h3 class="text-xl font-bold mb-3">✨ AI Product Suggester</h3>
+                        <p class="text-slate-600 mb-4">Describe what you're looking for, and our AI will suggest specific products and where to buy them.</p>
+                        <textarea id="product-query" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" rows="3" placeholder="e.g., 'noise cancelling headphones for travel under ₹15,000' or 'a good beginner audio interface for recording vocals'"></textarea>
+                        <button id="get-suggestion-btn" onclick="getProductSuggestion()" class="gemini-button mt-4 text-white font-bold py-2 px-6 rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center w-full sm:w-auto">
+                            Get Suggestion
+                        </button>
+                        <div id="product-suggestion-result" class="mt-4 p-4 bg-slate-50 rounded-lg text-slate-700 border border-slate-200 hidden"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="brand-directory" class="fade-in">
+                <h2 class="text-2xl md:text-3xl font-bold text-center mb-4">Verify Your Vendor: Official Brand Directory</h2>
+                <p class="text-center text-slate-600 mb-8 max-w-3xl mx-auto">For high-value items, buying from an authorized dealer is crucial for warranty and authenticity.</p>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <input type="text" id="brand-search" placeholder="🔍 Search for a brand (e.g., Sennheiser, Focusrite)..." class="w-full p-3 mb-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr>
+                                    <th class="p-3 bg-slate-100 font-semibold text-sm">Brand</th>
+                                    <th class="p-3 bg-slate-100 font-semibold text-sm">Official Indian D2C / Partner</th>
+                                    <th class="p-3 bg-slate-100 font-semibold text-sm">Key Authorized Online Retailers</th>
+                                </tr>
+                            </thead>
+                            <tbody id="brand-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="text-center mt-16 border-t border-slate-200 pt-8">
+            <button id="reset-button" class="hidden bg-amber-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-amber-600 transition-colors" onclick="resetApp()">Start Over</button>
+            <p class="text-slate-500 text-sm mt-4">Data synthesized from "The Indian Online Audio Equipment Market: A Comprehensive Vendor Analysis". AI features powered by Google Gemini.</p>
+        </footer>
 
     </div>
 
+    <div id="vendor-modal" class="modal fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none" onclick="closeModal()">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div id="modal-content" class="p-8"></div>
+        </div>
+    </div>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const FONT_COLOR = '#E6FDFF';
-            const GRID_COLOR = 'rgba(230, 253, 255, 0.1)';
-            const PALETTE = {
-                red: '#E84855',
-                yellow: '#F9DC5C',
-                blue: '#3185FC',
-                light: '#E6FDFF'
+        const DB = {
+            personas: {
+                musician: { name: "Musician / Producer", title: "For the Musician / Producer", description: "Your focus is on creation. Here’s a look at vendors specializing in pro-audio gear. Notice how specialist distributors offer the best service, while larger stores compete on selection and price.", recommendation: `<h3 class="text-xl font-bold mb-3">Sourcing Strategy:</h3><ul class="list-disc list-inside space-y-4 text-slate-700"><li><strong>High-Value Interfaces (Universal Audio, RME, etc.):</strong> Prioritize authorized distributors like <strong>ProMusicals</strong>. The expert support and guaranteed warranty are worth the potential price premium.</li><li><strong>Entry/Mid-Range Gear (Focusrite, Behringer, etc.):</strong> Retailers like <strong>Bajaao</strong> and <strong>Raj Musicals</strong> offer great selection and pricing. Be aware of inconsistent customer service. Always film the unboxing as proof.</li><li><strong>Studio Monitors:</strong> Given their fragility, a vendor with a reliable return policy is key. Specialist stores are a safer bet.</li></ul><h3 class="text-xl font-bold mt-6 mb-3">Final Checklist:</h3><ul class="list-disc list-inside space-y-2 text-slate-700"><li>Verify driver compatibility with your OS and DAW.</li><li>Check for valuable bundled software.</li></ul>` },
+                audiophile: { name: "Discerning Audiophile", title: "For the Discerning Audiophile", description: "Your world is about critical listening and the pursuit of sonic perfection. The vendors most relevant to you are 'Connoisseurs' who curate their collections and provide expert guidance.", recommendation: `<h3 class="text-xl font-bold mb-3">Procurement Path:</h3><ul class="list-disc list-inside space-y-4 text-slate-700"><li><strong>Headphones & IEMs:</strong> <strong>Headphone Zone</strong> is the top recommendation. Their curated selection, educational content, and excellent service make them an ideal partner. <strong>The Audio Store</strong> is a fantastic alternative for Chi-Fi IEMs.</li><li><strong>Hi-Fi Speakers & Home Theatre:</strong> For dedicated systems, specialists like <strong>AVstore</strong> and <strong>Watthifi</strong> are the premier choices.</li></ul><h3 class="text-xl font-bold mt-6 mb-3">Final Checklist:</h3><ul class="list-disc list-inside space-y-2 text-slate-700"><li>Leverage community knowledge from forums before high-value purchases.</li><li>Pay attention to product synergy (e.g., matching headphone impedance to amplifier output).</li></ul>` },
+                general: { name: "General Consumer", title: "For the General Consumer", description: "You need great, hassle-free audio for your daily life. Your best options are large 'Generalist' platforms and official brand stores, which prioritize convenience, price, and fast delivery.", recommendation: `<h3 class="text-xl font-bold mb-3">Best Practices:</h3><ul class="list-disc list-inside space-y-4 text-slate-700"><li><strong>Mainstream Gear (TWS, Bluetooth Speakers, etc.):</strong> <strong>Amazon</strong> and <strong>Flipkart</strong> offer the best combination of price, selection, and delivery speed.</li><li><strong>Mitigating Risk:</strong> Always buy from official sellers on these platforms (e.g., "Appario Retail" on Amazon).</li><li><strong>The Safest Bet:</strong> If the price is comparable, buying directly from the brand's website is the most secure option.</li></ul><h3 class="text-xl font-bold mt-6 mb-3">Final Checklist:</h3><ul class="list-disc list-inside space-y-2 text-slate-700"><li>Read the return policy carefully; it's often <strong>replacement-only</strong>.</li></ul>` }
+            },
+            vendors: [
+                { id: 'hpz', name: 'Headphone Zone', type: 'audiophile', scores: { selection: 4, service: 5, curation: 5, price: 3, community: 5 }, summary: 'India\'s premier audiophile store, excelling in service and community.', pros: ['Excellent, knowledgeable customer support', 'Unmatched community engagement (forums, events)', 'Superb curation of headphones, IEMs, and DACs'], cons: ['Warranty claims for some niche brands can be complex', 'Premium pricing outside of sale events'], key_brands: 'FiiO, Moondrop, Sennheiser, Audeze, HiFiMAN, Chord' },
+                { id: 'bajaao', name: 'Bajaao', type: 'musician', scores: { selection: 5, service: 2, curation: 2, price: 5, community: 1 }, summary: 'India\'s largest music gear store with a massive catalog and aggressive pricing.', pros: ['Vast product selection across all musician categories', 'Frequent sales and competitive pricing', 'Good for one-stop shopping'], cons: ['Customer service is highly inconsistent ("pathetic" to good)', 'Difficult and potentially costly return process', 'Delivery delays are a common complaint'], key_brands: 'Vault, Fender, Focusrite, Behringer, Yamaha' },
+                { id: 'tas', name: 'The Audio Store', type: 'audiophile', scores: { selection: 4, service: 4, curation: 4, price: 4, community: 2 }, summary: 'A strong competitor to Headphone Zone, specializing in IEMs.', pros: ['Excellent and deep selection of IEMs, especially Chi-Fi', 'Generally positive reputation for helpful advice', 'Competitive pricing and bundles'], cons: ['Return policy can be rigid', 'Some reports of unprofessional communication'], key_brands: 'Moondrop, KZ, ThieAudio, Tanchjim, 7HZ' },
+                { id: 'avs', name: 'AVstore.in', type: 'audiophile', scores: { selection: 3, service: 4, curation: 5, price: 2, community: 1 }, summary: 'Specialist for high-end home theatre and Hi-Fi systems.', pros: ['Authorized dealer for many premium speaker brands', 'Offers expert consultation and custom installations', 'Physical experience center for demos'], cons: ['Extremely strict return policy (35% restocking fee)', 'Niche focus, not for general audio gear'], key_brands: 'Bowers & Wilkins, KEF, Devialet, Denon, Marantz' },
+                { id: 'pm', name: 'ProMusicals', type: 'musician', scores: { selection: 3, service: 5, curation: 4, price: 3, community: 1 }, summary: 'Exclusive distributor for high-end pro-audio brands.', pros: ['The most reliable source for their distributed brands (e.g., Universal Audio)', 'Professional, accessible, and expert support', 'Strong reputation from their physical store'], cons: ['Catalog is deep but not broad', 'Less competitive on pricing than large retailers'], key_brands: 'Universal Audio, Focal, Novation, SPL, Telefunken' },
+                { id: 'rm', name: 'Raj Musicals', type: 'musician', scores: { selection: 4, service: 3, curation: 3, price: 4, community: 1 }, summary: 'Large-scale music store with a strong online presence.', pros: ['Vast product catalog, similar to Bajaao', 'Unique strength in traditional Indian instruments', 'Inspects guitars before shipping'], cons: ['Mixed service reviews', 'Return policy has many exceptions'], key_brands: 'Behringer, Steinberg, Cort, Yamaha' },
+                { id: 'amz', name: 'Amazon / Flipkart', type: 'general', scores: { selection: 5, service: 2, curation: 1, price: 5, community: 1 }, summary: 'Mass-market giants for consumer electronics.', pros: ['Unbeatable convenience, fast delivery', 'Aggressive pricing on popular items', 'Huge selection of mainstream brands'], cons: ['Replacement-only policy, no returns for dissatisfaction', 'Risk of counterfeit sellers', 'Zero expert guidance'], key_brands: 'Sony, JBL, Bose, boAt, OnePlus, Noise' },
+                { id: 'd2c', name: 'Brand D2C Stores', type: 'general', scores: { selection: 2, service: 4, curation: 5, price: 3, community: 1 }, summary: 'Official brand websites like sony.co.in, in.jbl.com.', pros: ['100% guarantee of authenticity and warranty', 'Direct-from-manufacturer support', 'Access to the latest product launches'], cons: ['Limited to a single brand', 'Often less competitive pricing than marketplaces'], key_brands: 'Sennheiser, Sony, Bose, JBL, Harman Kardon' }
+            ],
+            brands: [
+                { name: 'Sennheiser', d2c: 'sennheiser-hearing.com', retailers: 'Headphone Zone, Amazon (Official Store)' }, { name: 'Sony', d2c: 'sony.co.in, shopatsc.com', retailers: 'Amazon (Official Store), Reliance Digital, Croma' }, { name: 'Bose', d2c: 'bose.com/en_in', retailers: 'Croma, Amazon (Official Store)' }, { name: 'JBL / Harman Kardon', d2c: 'in.jbl.com', retailers: 'Official Partner Stores, Amazon' }, { name: 'Shure', d2c: 'shure.com/en-IN', retailers: 'Bajaao, ProMusicals' }, { name: 'Audio-Technica', d2c: 'N/A', retailers: 'Headphone Zone, Bajaao' }, { name: 'Beyerdynamic', d2c: 'N/A', retailers: 'Bajaao, Headphone Zone' }, { name: 'Bowers & Wilkins', d2c: 'N/A', retailers: 'AVstore.in, ProHiFi.in' }, { name: 'KEF', d2c: 'international.kef.com', retailers: 'Ooberpad.com, AVstore.in' }, { name: 'Klipsch', d2c: 'N/A', retailers: 'Cinebels.com (Authorized Dealer)' }, { name: 'Focusrite', d2c: 'focusrite.com (Global)', retailers: 'Bajaao, ProMusicals, TheProAudio' }, { name: 'Universal Audio', d2c: 'N/A', retailers: 'TheProAudio, ProMusicals' }
+            ]
+        };
+
+        let currentPersona = null;
+        let radarChart = null;
+
+        const mainContentEl = document.getElementById('main-content');
+        const welcomeHeaderEl = document.getElementById('welcome-header');
+        const vendorGridEl = document.getElementById('vendor-grid');
+        const recommendationContentEl = document.getElementById('recommendation-content');
+        const resetButtonEl = document.getElementById('reset-button');
+        const brandTableBodyEl = document.getElementById('brand-table-body');
+        const brandSearchEl = document.getElementById('brand-search');
+        const modalEl = document.getElementById('vendor-modal');
+        const modalContentEl = document.getElementById('modal-content');
+        const productSuggestionResultEl = document.getElementById('product-suggestion-result');
+
+        function selectPersona(persona) {
+            currentPersona = persona;
+            document.getElementById('persona-selection').classList.add('hidden');
+            mainContentEl.classList.remove('hidden');
+            resetButtonEl.classList.remove('hidden');
+            renderContent();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderContent() {
+            const personaData = DB.personas[currentPersona];
+            welcomeHeaderEl.innerHTML = `<h2 class="text-3xl font-bold mb-2">${personaData.title}</h2><p class="text-slate-600 max-w-3xl mx-auto">${personaData.description}</p>`;
+            recommendationContentEl.innerHTML = personaData.recommendation;
+            const vendorsToDisplay = getRelevantVendors();
+            renderVendorGrid(vendorsToDisplay);
+            renderRadarChart(vendorsToDisplay);
+        }
+        
+        function getRelevantVendors() {
+            const relevantTypes = { musician: ['musician'], audiophile: ['audiophile'], general: ['general'] };
+            return DB.vendors.filter(v => relevantTypes[currentPersona].includes(v.type) || (currentPersona !== 'general' && v.type === 'general'));
+        }
+
+        function renderVendorGrid(vendors) {
+            vendorGridEl.innerHTML = '';
+            vendors.forEach(vendor => {
+                const card = document.createElement('div');
+                card.className = 'vendor-card bg-white p-6 rounded-lg shadow-sm border border-slate-200 cursor-pointer';
+                card.innerHTML = `<h4 class="font-bold text-lg mb-2">${vendor.name}</h4><p class="text-slate-600 text-sm">${vendor.summary}</p>`;
+                card.onclick = () => showModal(vendor.id);
+                vendorGridEl.appendChild(card);
+            });
+        }
+
+        function showModal(vendorId) {
+            const vendor = DB.vendors.find(v => v.id === vendorId);
+            modalContentEl.innerHTML = `
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-2xl font-bold">${vendor.name}</h3>
+                    <button class="text-2xl text-slate-500 hover:text-slate-800" onclick="closeModal()">&times;</button>
+                </div>
+                <p class="text-slate-600 mb-6">${vendor.summary}</p>
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <h4 class="font-semibold mb-2 text-teal-700">Pros</h4>
+                        <ul class="list-disc list-inside space-y-1 text-slate-700">${vendor.pros.map(pro => `<li>${pro}</li>`).join('')}</ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-2 text-red-700">Cons</h4>
+                        <ul class="list-disc list-inside space-y-1 text-slate-700">${vendor.cons.map(con => `<li>${con}</li>`).join('')}</ul>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <h4 class="font-semibold mb-2">Key Brands</h4>
+                    <p class="text-slate-600 text-sm">${vendor.key_brands}</p>
+                </div>
+                <div class="border-t border-slate-200 pt-6">
+                    <h4 class="font-semibold mb-3">✨ AI-Powered Rationale</h4>
+                    <button id="get-rationale-btn" onclick="getPurchaseRationale('${vendor.id}')" class="gemini-button text-white font-bold py-2 px-5 rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center w-full sm:w-auto">
+                        Should I buy from here?
+                    </button>
+                    <div id="rationale-result" class="mt-4 p-4 bg-slate-50 rounded-lg text-slate-700 border border-slate-200 hidden"></div>
+                </div>
+            `;
+            modalEl.classList.remove('opacity-0', 'pointer-events-none');
+        }
+
+        function closeModal() {
+            modalEl.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        async function callGeminiAPI(prompt) {
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: prompt }] }]
             };
 
-            function wrapLabel(str, maxWidth) {
-                if (typeof str !== 'string' || str.length <= maxWidth) {
-                    return str;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    throw new Error(`API call failed with status: ${response.status}`);
                 }
-                const words = str.split(' ');
-                let lines = [];
-                let currentLine = words[0];
-                for (let i = 1; i < words.length; i++) {
-                    if ((currentLine + ' ' + words[i]).length > maxWidth) {
-                        lines.push(currentLine);
-                        currentLine = words[i];
-                    } else {
-                        currentLine += ' ' + words[i];
-                    }
+                const result = await response.json();
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                    return result.candidates[0].content.parts[0].text;
+                } else {
+                    return "Sorry, I couldn't generate a response. The model's response was empty.";
                 }
-                lines.push(currentLine);
-                return lines;
+            } catch (error) {
+                console.error("Gemini API Error:", error);
+                return "An error occurred while contacting the AI assistant. Please check the console for details.";
+            }
+        }
+
+        async function getPurchaseRationale(vendorId) {
+            const rationaleResultEl = document.getElementById('rationale-result');
+            const rationaleBtn = document.getElementById('get-rationale-btn');
+            const vendor = DB.vendors.find(v => v.id === vendorId);
+            const personaName = DB.personas[currentPersona].name;
+
+            rationaleBtn.disabled = true;
+            rationaleBtn.innerHTML = 'Thinking...';
+            rationaleResultEl.classList.remove('hidden');
+            rationaleResultEl.innerHTML = '🧠 Generating personalized advice...';
+
+            const prompt = `I am a '${personaName}' in India. I'm considering buying audio gear from a vendor named '${vendor.name}'. Their listed pros are: [${vendor.pros.join(', ')}] and their cons are: [${vendor.cons.join(', ')}]. Based on this, generate a short, 2-3 sentence rationale for why choosing this vendor is a good or bad idea for someone with my profile. Then, suggest one single, crucial question I should ask them or myself before buying. Format the output as plain text.`;
+            
+            const response = await callGeminiAPI(prompt);
+            rationaleResultEl.innerHTML = response.replace(/\n/g, '<br>');
+            rationaleBtn.disabled = false;
+            rationaleBtn.innerHTML = 'Should I buy from here?';
+        }
+
+        async function getProductSuggestion() {
+            const productQuery = document.getElementById('product-query').value;
+            const suggestionBtn = document.getElementById('get-suggestion-btn');
+
+            if (!productQuery.trim()) {
+                productSuggestionResultEl.classList.remove('hidden');
+                productSuggestionResultEl.innerText = "Please describe what you're looking for.";
+                return;
             }
 
-            const commonTooltipConfig = {
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            title: function(tooltipItems) {
-                                const item = tooltipItems[0];
-                                let label = item.chart.data.labels[item.dataIndex];
-                                if (Array.isArray(label)) {
-                                  return label.join(' ');
-                                } else {
-                                  return label;
-                                }
-                            }
-                        }
-                    },
-                    legend: {
-                        display: false
-                    }
-                }
-            };
-
-            const commonAxisConfig = {
-                ticks: { color: FONT_COLOR, font: { size: 12 } },
-                grid: { color: GRID_COLOR, drawBorder: false }
-            };
-
-            const labels = [
-                wrapLabel('Arturia Minifuse 2', 16),
-                wrapLabel('Steinberg UR22C', 16),
-                wrapLabel('MOTU M2', 16),
-                wrapLabel('Focusrite 2i2 4th Gen', 16)
-            ];
-
-            new Chart(document.getElementById('gainChart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Gain Range (dB)',
-                        data: [56, 60, 60, 69],
-                        backgroundColor: [PALETTE.red, PALETTE.yellow, PALETTE.blue, PALETTE.light],
-                        borderColor: 'transparent',
-                        borderWidth: 1,
-                        borderRadius: 5
-                    }]
-                },
-                options: { ...commonTooltipConfig, responsive: true, maintainAspectRatio: false, scales: { y: { ...commonAxisConfig, beginAtZero: true }, x: { ...commonAxisConfig } } }
-            });
-
-            new Chart(document.getElementById('dynamicRangeChart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Dynamic Range (dB)',
-                        data: [110, 102, 115, 116],
-                        backgroundColor: [PALETTE.red, PALETTE.yellow, PALETTE.blue, PALETTE.light],
-                        borderColor: 'transparent',
-                        borderWidth: 1,
-                        borderRadius: 5
-                    }]
-                },
-                options: { ...commonTooltipConfig, responsive: true, maintainAspectRatio: false, scales: { y: { ...commonAxisConfig, suggestedMin: 100 }, x: { ...commonAxisConfig } } }
-            });
+            suggestionBtn.disabled = true;
+            suggestionBtn.innerHTML = 'Searching...';
+            productSuggestionResultEl.classList.remove('hidden');
+            productSuggestionResultEl.innerHTML = '🧠 Searching for product recommendations...';
             
-            new Chart(document.getElementById('einChart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'EIN (dBu)',
-                        data: [-129, 0, -129, -127],
-                        backgroundColor: [PALETTE.red, '#4B5563', PALETTE.blue, PALETTE.light],
-                        borderColor: 'transparent',
-                        borderWidth: 1,
-                        borderRadius: 5
-                    }]
-                },
-                options: { ...commonTooltipConfig, responsive: true, maintainAspectRatio: false, scales: { y: { ...commonAxisConfig, suggestedMax: 0 }, x: { ...commonAxisConfig } } }
-            });
+            const personaName = DB.personas[currentPersona].name;
+            const relevantVendors = getRelevantVendors().map(v => v.name).join(', ');
 
-            new Chart(document.getElementById('headphonePowerChart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Power (mW)',
-                        data: [137, 15, 90, 32],
-                        backgroundColor: [PALETTE.red, PALETTE.yellow, PALETTE.blue, PALETTE.light],
-                        borderColor: 'transparent',
-                        borderWidth: 1,
-                        borderRadius: 5
-                    }]
-                },
-                options: { ...commonTooltipConfig, responsive: true, maintainAspectRatio: false, scales: { y: { ...commonAxisConfig, beginAtZero: true }, x: { ...commonAxisConfig } } }
-            });
+            const prompt = `I am a '${personaName}' in India looking for: "${productQuery}". Based on the following relevant vendors in the Indian market (${relevantVendors}), suggest one or two specific product models that fit my request. For each suggestion, recommend the best vendor from the list to buy it from and briefly explain why. Format the response as plain text with clear headings for each product.`;
+            
+            const response = await callGeminiAPI(prompt);
+            productSuggestionResultEl.innerHTML = response.replace(/\n/g, '<br>');
+            suggestionBtn.disabled = false;
+            suggestionBtn.innerHTML = 'Get Suggestion';
+        }
 
-            new Chart(document.getElementById('headphoneImpedanceChart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Impedance (Ω)',
-                        data: [10, 40, 1, 50],
-                        backgroundColor: [PALETTE.red, PALETTE.yellow, PALETTE.blue, PALETTE.light],
-                        borderColor: 'transparent',
-                        borderWidth: 1,
-                        borderRadius: 5
-                    }]
-                },
-                options: { ...commonTooltipConfig, responsive: true, maintainAspectRatio: false, scales: { y: { ...commonAxisConfig, beginAtZero: true }, x: { ...commonAxisConfig } } }
+        function renderRadarChart(vendors) {
+            const ctx = document.getElementById('vendorRadarChart').getContext('2d');
+            const labels = ['Selection', 'Service', 'Curation', 'Price', 'Community'];
+            const colors = [ { bg: 'rgba(56, 189, 189, 0.2)', border: 'rgb(13, 148, 136)' }, { bg: 'rgba(245, 158, 11, 0.2)', border: 'rgb(217, 119, 6)' }, { bg: 'rgba(99, 102, 241, 0.2)', border: 'rgb(79, 70, 229)' }, { bg: 'rgba(239, 68, 68, 0.2)', border: 'rgb(220, 38, 38)' }, { bg: 'rgba(107, 114, 128, 0.2)', border: 'rgb(75, 85, 99)' }, { bg: 'rgba(168, 85, 247, 0.2)', border: 'rgb(147, 51, 234)' }, { bg: 'rgba(234, 179, 8, 0.2)', border: 'rgb(202, 138, 4)' }, { bg: 'rgba(34, 197, 94, 0.2)', border: 'rgb(22, 163, 74)' } ];
+            const datasets = vendors.map((vendor, index) => ({
+                label: vendor.name,
+                data: [vendor.scores.selection, vendor.scores.service, vendor.scores.curation, vendor.scores.price, vendor.scores.community],
+                backgroundColor: colors[index % colors.length].bg,
+                borderColor: colors[index % colors.length].border,
+                pointBackgroundColor: colors[index % colors.length].border,
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: colors[index % colors.length].border,
+                borderWidth: 2
+            }));
+
+            if (radarChart) radarChart.destroy();
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: { labels, datasets },
+                options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: 'rgba(0, 0, 0, 0.1)' }, grid: { color: 'rgba(0, 0, 0, 0.1)' }, pointLabels: { font: { size: 14, weight: 'bold' }, color: '#334155' }, ticks: { backdropColor: 'rgba(255, 255, 255, 0.75)', color: '#475569', stepSize: 1, font: { size: 10 } }, min: 0, max: 5 } }, plugins: { legend: { position: 'bottom', labels: { font: { size: 12 }, usePointStyle: true } } } }
             });
+        }
+        
+        function populateBrandTable(brands) {
+             brandTableBodyEl.innerHTML = '';
+             brands.forEach(brand => {
+                 const row = document.createElement('tr');
+                 row.className = 'border-b border-slate-200 hover:bg-slate-50';
+                 row.innerHTML = `<td class="p-3 font-medium">${brand.name}</td><td class="p-3 text-slate-600">${brand.d2c}</td><td class="p-3 text-slate-600">${brand.retailers}</td>`;
+                 brandTableBodyEl.appendChild(row);
+             });
+        }
+
+        brandSearchEl.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredBrands = DB.brands.filter(brand => brand.name.toLowerCase().includes(searchTerm));
+            populateBrandTable(filteredBrands);
         });
+        
+        function resetApp() {
+            currentPersona = null;
+            document.getElementById('persona-selection').classList.remove('hidden');
+            mainContentEl.classList.add('hidden');
+            resetButtonEl.classList.add('hidden');
+            if (radarChart) {
+                radarChart.destroy();
+                radarChart = null;
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        populateBrandTable(DB.brands);
+
     </script>
 </body>
 </html>
